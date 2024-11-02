@@ -35,6 +35,7 @@ public class ClientThread implements Runnable
             BufferedReader in = new BufferedReader(new InputStreamReader(client_link.getInputStream()));
             PrintWriter out = new PrintWriter(client_link.getOutputStream(), true);
 
+            //reads incoming message from client and displays it on the server terminal
             String message = in.readLine();
             System.out.println("Message received from client: " + clientID + "  " + message);
             
@@ -47,7 +48,7 @@ public class ClientThread implements Runnable
             //check if command has a valid length and that one of the actions is used
             if (tokens.length < 1 || tokens.length > 3 || !checkIfExists(action, actions))
             {
-                //message returned here to avoid having to create another new PrintWriter
+                //message returned here to avoid having to create another new PrintWriter in catch statement
                 out.println("Syntax Error!");
                 throw new IncorrectActionException();
             }
@@ -67,6 +68,7 @@ public class ClientThread implements Runnable
             
             switch (action)
             {
+                //adds task to list
                 case "add":
                     //add command requires 3 tokens
                     if (tokens.length != 3)
@@ -84,42 +86,53 @@ public class ClientThread implements Runnable
                     }
                     else
                     {
-                        //creates a new HashSet if there is tasks yet for the given date
+                        //creates a new HashSet if there is no tasks yet for the given date
                         HashSet<String> map = new HashSet<>();
                         map.add(note);
                         //adds date as key and HashSet as value to HashMap
                         list.put(date, map);
                     }
+                    //returns confirmation message to client
                     out.println("added " + note + " for " + date);
                     break;
                     
+                //lists all tasks for a given date
                 case "list":
+                    //this command requires 2 tokens
                     if (tokens.length < 2)
                     {
                         out.println("Syntax Error!");
                         throw new IncorrectActionException();
                     }
-                    
+                    //spaces out message to improve readability
                     String result = "\r\n";
+
+                    //checks if their are tasks stored on the given date
                     if (list.size() == 0 || !list.containsKey(date))
                     {
                         result = "List is Empty!";
                     }
-                    
-                    result += date + "\r\n";
-                    HashSet<String> map = list.get(date);
-
-                    for (String todo : map)
+                    else
                     {
-                        result += " + " + todo + "\r\n";
+                        result += date + "\r\n";
+                        //gets the HashSet stored on for the date key
+                        HashSet<String> map = list.get(date);
+
+                        //loops through the HashSet and adds it to the result string
+                        for (String todo : map)
+                        {
+                            result += " + " + todo + "\r\n";
+                        }
+                        
+                        result += "\r\n";
                     }
-                    
-                    result += "\r\n";
                     
                     out.println(result);
                     break;
                     
+                //ends connection with client
                 case "STOP":
+
                     out.println("TERMINATE");
                     try
                     {
@@ -133,7 +146,9 @@ public class ClientThread implements Runnable
                     break;
                     
                 case "admin":
-                     if (tokens.length != 3)
+                    //this is used to forcefully shutdown the server
+                    //command: admin;SHUTDOWN;password
+                    if (tokens.length != 3)
                     {
                         out.println("Syntax Error!");
                         throw new IncorrectActionException();
@@ -187,8 +202,4 @@ public class ClientThread implements Runnable
         return false;
     }
 
-    public void addTask(String[] tokens, HashMap<String, HashSet<String>> list, PrintWriter out)
-    {
-        
-    }
 }
